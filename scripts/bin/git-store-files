@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+while [ -n "$1" ]; do
+	HASH=$(git hash-object -w "$1")
+	INDEXED_HASH=$(git ls-files --stage "$1" | awk '{ print $2 }')
+	if [ -n "$INDEXED_HASH" ]
+	then
+		if [ "$HASH" = "$INDEXED_HASH" ]
+		then
+			echo "identical object already present: $HASH $1" >&2
+			rm "$1"
+		else
+			echo "conflicting object already present: old:$INDEXED_HASH new:$HASH $1" >&2
+		fi
+	else
+		echo -e "100$(stat -c %a "$1") $HASH 0\t$1" | tee -a "$(git rev-parse --git-dir)/index-info.todo"
+		rm "$1"
+	fi
+	shift
+done

@@ -1,0 +1,32 @@
+#!/bin/bash
+set -e
+GIT_DIR=$(git rev-parse --git-dir)
+while [ -n "$1" ]
+do
+	original=$1
+	OBJID=$(git ls-files -s "$original" | awk '{ print $2 }')
+	OBJMODE=$(git ls-files -s "$original" | awk '{ print $1 }')
+	if [ -z "$OBJID" ]
+	then
+		echo "error: $1 isn't in the git index yet; add it before generating its date index" >&2
+		exit 1
+	fi
+	BASENAME=$(basename --suffix=.CR2 "$original")
+	DIRNAME=$(dirname "$original")
+	CTIME=$(git cat-file -p $OBJID | nix run nixpkgs\#exiftool -- -s3 -SubSecCreateDate -d "%Y:%m:%d-%H:%M:%S%f" -)
+	if [ -z "$CTIME" ]
+	then
+		echo "error: couldn't get SubSecCreateDate from $1"
+		shift
+		continue
+	fi
+	echo -e "$OBJMODE $OBJID 0\tORIGINAL-DATED/$CTIME.CR2" | tee -a "$GIT_DIR/index-info.todo"
+	XMP=$DIRNAME/$BASENAME.xmp
+	OBJID=$(git ls-files -s "$XMP" | awk '{ print $2 }')
+	OBJMODE=$(git ls-files -s "$XMP" | awk '{ print $1 }')
+	if [ -n "$OBJID" ]
+	then echo -e "OBJMODE $OBJID 0\tORIGINAL-DATED/$CTIME.xmp" | tee -a "$GIT_DIR/index-info.todo"
+	fi
+	shift
+done
+git todo-update-index

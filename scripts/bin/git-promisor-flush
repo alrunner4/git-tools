@@ -1,0 +1,7 @@
+#!/bin/bash
+PACKDIR=$(git rev-parse --git-dir)/objects/pack
+for p in $(find "$PACKDIR" -name \*.promisor)
+do
+	BASE=$(basename --suffix=.promisor "$p")
+	rm -f "$PACKDIR/$BASE.idx" "$PACKDIR/$BASE.pack" "$PACKDIR/$BASE.promisor"
+done

@@ -1,0 +1,23 @@
+#!/bin/bash
+set -e
+TODO_SOURCE=$(git rev-parse --git-dir)/index-info.todo
+if [ ! -f "$TODO_SOURCE" ]
+then
+	echo "$0: nothing to do" >&2
+	exit 0
+fi
+TODO_DIR=$(mktemp -d /tmp/git-todo-update-index-XXXX)
+TODO_TMP=$TODO_DIR/index-info.todo
+mv "$TODO_SOURCE" "$TODO_DIR/"
+cleanup() {
+	rm "$TODO_TMP"
+	rmdir "$TODO_DIR"
+	trap '' INT TERM EXIT
+}
+no-commit() {
+	cat "$TODO_TMP" >> "$TODO_SOURCE"
+	cleanup
+}
+trap no-commit INT TERM EXIT
+git update-index --verbose --index-info < "$TODO_TMP"
+cleanup
