@@ -6,14 +6,15 @@ dependencies = [
 ];
 
 tools-interpreter = pkgs.writeShellScript "git-tools-interpreter" ''
-    export PATH=${builtins.concatStringsSep ":" (builtins.map (dep: "${dep}/bin") dependencies) }
+    export PATH=${builtins.concatStringsSep ":" (builtins.map (dep: "${dep}/bin") dependencies) }:$PATH
     exec $(${pkgs.coreutils}/bin/readlink /proc/$$/exe) "$@"
     '';
 
 patchshebangs = import (builtins.fetchGit {
     url = "git@github.com:alrunner4/patchshebangs";
     ref = "main";
-}) { inherit pkgs; };
+    rev = "f6af2ae1839cc4dba5ae574a849fa6ed0a7227d8";
+}) { inherit pkgs system; };
 
 in rec
 {
