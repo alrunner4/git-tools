@@ -1,7 +1,7 @@
 ### `nix profile add github:alrunner4/git-tools`
 Install these tools into your profile.
 
-### `git-index-dates $index_paths_to_CR2_files`
+### `git index-dates $index_paths_to_CR2_files`
 Creates timestamped index entries for CR2 image files under the tree named
 ORIGINALS-DATED.
 
