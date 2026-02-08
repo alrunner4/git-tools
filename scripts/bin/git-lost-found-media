@@ -1,22 +1,17 @@
 #!/usr/bin/bash
 set -eu
 GIT_DIR=$(git rev-parse --git-dir)
-git fsck --cache --connectivity-only --lost-found | awk '$1 == "dangling" && $2 == "blob" { print $3 }' | (
+git fsck --cache --connectivity-only | awk '$1 == "dangling" && $2 == "blob" { print $3 }' | (
 	while read objid
 	do
-		CONTENTTYPE=$(git cat-file -p $objid | exiftool -FileTypeExtension -)
-		if [ -z "$CONTENTTYPE" ]
-		then
-			echo "unknown content type for $objid" >&2
-			continue
-		fi
-		CTIME=$(git cat-file -p $objid | exiftool -s3 -SubSecCreateDate -d "%Y:%m:%d-%H:%M:%S%f" -)
-		if [ -z "$CTIME" ]
-		then
-			echo "unknown creation time for $objid" >&2
-			continue
-		fi
-		echo -e "0644 $objid 0\tORIGINAL-DATED/$CTIME.$CONTENTTYPE" | tee -a "$GIT_DIR/index-info.todo"
+		echo "$objid: $(git cat-file -s $objid) bytes"
+		git cat-file -p $objid | exiftool -s3 -p '$FileTypeExtension $SubSecCreateDate' -d "%Y:%m:%d-%H:%M:%S%f" - 2>/dev/null | awk "{
+			if (NF == 2) {
+				print \"0644 \" \"$objid\" \" 0\tORIGINAL-DATED/\" \$2 \".\" \$1
+			} else {
+				print \"unknown creation time for $objid\" > \"/dev/stderr\"
+			}
+		}" | tee -a "$GIT_DIR/index-info.todo"
 	done
 )
 git todo-update-index
