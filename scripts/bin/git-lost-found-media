@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 set -eu
 GIT_DIR=$(git rev-parse --git-dir)
-git fsck --cache --connectivity-only --lost-found | awk '$1 == "dangling && $2 == "blob" { print $3 }' | (
+git fsck --cache --connectivity-only --lost-found | awk '$1 == "dangling" && $2 == "blob" { print $3 }' | (
 	while read objid
 	do
 		CONTENTTYPE=$(git cat-file -p $objid | exiftool -FileTypeExtension -)
