@@ -9,7 +9,6 @@ fi
 TREE=$1
 REPO=$(git rev-parse --git-dir)
 PACK_CONTENT=$(mktemp "$REPO/pack-verify.XXX.tmp")
-echo "TEMP: $PACK_CONTENT"
 
 cleanup () {
 	rm "$PACK_CONTENT"
