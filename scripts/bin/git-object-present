@@ -1,0 +1,21 @@
+#!/usr/bin/bash
+set -eu
+if [ $# -ne 1 -o -z "$1" ]
+then
+	echo "$0: requires exactly one object argument" >&2
+	exit 1
+fi
+OBJECT=$1
+
+REPO=$(git rev-parse --git-dir)
+
+# look in objects
+if [ -f "$REPO/objects/${OBJECT:0:2}/${OBJECT:2}" ]
+then
+	exit 0
+fi
+
+# look in packs
+# set -x
+exec find "$REPO"/objects/pack -name \*.idx | xargs git verify-pack -v 2>/dev/null | grep -q $OBJECT
+

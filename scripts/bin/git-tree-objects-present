@@ -1,0 +1,19 @@
+#!/usr/bin/bash
+set -eu
+if [ $# -ne 1 -o -z "$1" ]
+then
+	echo "$0: requires exactly one tree argument" >&2
+	exit 1
+fi
+
+TREE=$1
+
+git ls-tree -r "$TREE" | awk -F'\t' '{
+	split($1, meta, " ")
+	oid = meta[3]
+	if (system("git object-present " oid) == 0) {
+		print "present " oid " " $2
+	} else {
+		print "missing " oid " " $2
+	}
+}'
