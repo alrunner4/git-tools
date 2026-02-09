@@ -7,13 +7,29 @@ then
 fi
 
 TREE=$1
+REPO=$(git rev-parse --git-dir)
+PACK_CONTENT=$(mktemp "$REPO/pack-verify.XXX.tmp")
+echo "TEMP: $PACK_CONTENT"
 
-git ls-tree -r "$TREE" | awk -F'\t' '{
-	split($1, meta, " ")
+cleanup () {
+	rm "$PACK_CONTENT"
+	trap '' INT TERM EXIT
+}
+trap cleanup INT TERM EXIT
+
+find "$REPO"/objects -mindepth 2 -type f | awk -F/ '{ print $3 $4 }' > $PACK_CONTENT
+find "$REPO"/objects/pack -name \*.idx -print0 | xargs -0 git verify-pack >> $PACK_CONTENT
+
+git ls-tree -r "$TREE" | awk -F'\t' "$(cat <<AWK
+{
+	split(\$1, meta, " ")
 	oid = meta[3]
-	if (system("git object-present " oid) == 0) {
-		print "present " oid " " $2
+	if (system("grep -q " oid " " "$PACK_CONTENT") == 0) {
+		print "present " oid " " \$2
 	} else {
-		print "missing " oid " " $2
+		print "missing " oid " " \$2
 	}
-}'
+}
+AWK
+)"
+cleanup
