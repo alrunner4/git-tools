@@ -5,8 +5,8 @@ then
 	echo "$0: requires exactly one object argument" >&2
 	exit 1
 fi
-OBJECT=$1
 
+OBJECT=$1
 REPO=$(git rev-parse --git-dir)
 
 # look in objects

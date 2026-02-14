@@ -1,0 +1,18 @@
+#!/usr/bin/bash
+if [ $# != 1 ]
+then
+	echo "$0: exactly one tree argument required" >&2
+	exit 1
+fi
+
+git ls-tree -r "$1" | awk -F'\t' "$(cat <<AWK
+{
+	split(\$1, meta, " ")
+	file = \$2
+	stat = meta[1]
+	oid = meta[3]
+	stage = 0
+	print stat " " oid " " stage "\t" file
+}
+AWK
+)" | tee -a $(git rev-parse --git-dir)/index-info.todo

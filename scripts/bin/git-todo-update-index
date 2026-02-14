@@ -1,10 +1,26 @@
 #!/bin/bash
 set -e
+if [ $# -gt 1 ]
+then
+	echo "$0: the only supported argument is --dry-run"
+	exit 1
+fi
 TODO_SOURCE=$(git rev-parse --git-dir)/index-info.todo
 if [ ! -f "$TODO_SOURCE" ]
 then
 	echo "$0: nothing to do" >&2
 	exit 0
+fi
+if [ $# = 1 ]
+then
+	if [ "$1" = "--dry-run" ]
+	then
+		cat "$TODO_SOURCE"
+		exit 0
+	else
+		echo "$0: unsupported argument \"$1\""
+		exit 1
+	fi
 fi
 TODO_DIR=$(mktemp -d /tmp/git-todo-update-index-XXXX)
 TODO_TMP=$TODO_DIR/index-info.todo

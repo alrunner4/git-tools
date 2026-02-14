@@ -11,7 +11,8 @@ contained objects will then require another promisor fulfillment.
 
 ### `git store-files $filenames`
 Move working files referred to by `$filenames` into the object store,
-removing them from the work tree.
+removing them from the work tree. Does not update the index, but instead appends
+to `index-info.todo`.
 
 ### `git todo-update-index`
 Reads `update-index --index-info` entries from `$GIT_DIR/index-info.todo`
