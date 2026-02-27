@@ -1,0 +1,32 @@
+#!/bin/bash
+set -eu
+REPO=$(git rev-parse --git-dir)
+OBJECT_REFS=$(mktemp "$REPO"/object-refs-XXX)
+cleanup() {
+	rm "$OBJECT_REFS"
+	trap '' INT TERM EXIT
+}
+trap cleanup INT TERM EXIT
+
+(git for-each-ref --format='%(refname)'; git reflog --all --no-abbrev-commit | awk '{print $1}') |\
+while read ref; do
+    git rev-list --objects "$ref" | awk '{ print $1 }' | sort -u | sed "s:$: $ref:"
+done | sort -u > "$OBJECT_REFS"
+
+if [ "${1+x}" ]
+then
+	while [ "${1+x}" ]
+	do
+		grep "$1" "$OBJECT_REFS"
+		shift
+	done
+else
+	( find "$REPO"/objects -type f -regextype posix-extended -regex "$REPO/objects/[0-9a-f]{2}/[0-9a-f]{38}";
+	  find "$REPO"/objects -name \*.idx | xargs -r git verify-pack -v |\
+		  grep -v -e "non delta" -e "chain length" -e pack |\
+		  awk '{print $1}' )\
+	  | sed -e "s#$REPO/objects/##" -e 's#/##' \
+	  | sort \
+	  | join -a1 -e 'UNREACHABLE' -o '1.1 2.2' - "$OBJECT_REFS"
+fi
+cleanup
