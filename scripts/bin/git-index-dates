@@ -13,19 +13,19 @@ do
 	fi
 	BASENAME=$(basename --suffix=.CR2 "$original")
 	DIRNAME=$(dirname "$original")
-	CTIME=$(git cat-file -p $OBJID | exiftool -s3 -SubSecCreateDate -d "%Y:%m:%d-%H:%M:%S%f" -)
+	CTIME=$(git cat-file -p $OBJID | exiftool -s3 -SubSecCreateDate -d "%Y/%m/%d/%Y-%m-%d-%H-%M-%S%f" -)
 	if [ -z "$CTIME" ]
 	then
 		echo "error: couldn't get SubSecCreateDate from $1"
 		shift
 		continue
 	fi
-	echo -e "$OBJMODE $OBJID 0\tORIGINAL-DATED/$CTIME.CR2" | tee -a "$GIT_DIR/index-info.todo"
+	echo -e "$OBJMODE $OBJID 0\tDATED/$CTIME.CR2" | tee -a "$GIT_DIR/index-info.todo"
 	XMP=$DIRNAME/$BASENAME.xmp
 	OBJID=$(git ls-files -s "$XMP" | awk '{ print $2 }')
 	OBJMODE=$(git ls-files -s "$XMP" | awk '{ print $1 }')
 	if [ -n "$OBJID" ]
-	then echo -e "$OBJMODE $OBJID 0\tORIGINAL-DATED/$CTIME.xmp" | tee -a "$GIT_DIR/index-info.todo"
+	then echo -e "$OBJMODE $OBJID 0\tDATED/$CTIME.xmp" | tee -a "$GIT_DIR/index-info.todo"
 	fi
 	shift
 done
