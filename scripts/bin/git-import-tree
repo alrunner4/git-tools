@@ -1,11 +1,12 @@
 #!/usr/bin/bash
-if [ $# != 1 ]
+set -eu
+if [ $# = 0 ]
 then
-	echo "$0: exactly one tree argument required" >&2
+	echo "$0: a tree argument is required" >&2
 	exit 1
 fi
 
-git ls-tree -r "$1" | awk -F'\t' "$(cat <<AWK
+git ls-tree -r "$@" | awk -F'\t' "$(cat <<AWK
 {
 	split(\$1, meta, " ")
 	file = \$2
@@ -16,3 +17,4 @@ git ls-tree -r "$1" | awk -F'\t' "$(cat <<AWK
 }
 AWK
 )" | tee -a $(git rev-parse --git-dir)/index-info.todo
+echo "$0: staged contents of tree $1 in index-info.todo (cf: git todo-update-index)" >&2
